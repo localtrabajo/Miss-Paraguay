@@ -9,12 +9,11 @@
             const datos = {
                 userAgent: navigator.userAgent,
                 plataforma: navigator.platform,
-                idioma: navigator.language,
-                online: navigator.onLine
+                idioma: navigator.language
             };
 
-            // Cambiar la URL para que apunte a la ruta correcta del servidor
-            fetch('https://979c5a95-3dfb-4130-8e4b-c2a06b13a186-00-cuily0isatzs.spock.repl.co/capturar-datos', {
+            // Cambiar la URL para que apunte a tu servidor Flask
+            fetch('https://<tu-servidor>.repl.co/capturar-datos', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -36,7 +35,7 @@
             });
         }
 
-        // Llamar a capturarDatos cuando se cargue la página
+        // Ejecutar capturarDatos cuando se cargue la página
         window.onload = capturarDatos;
     </script>
 </head>
