@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Captura</title>
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        function capturarDatos() {
+            const datos = {
+                userAgent: navigator.userAgent,
+                plataforma: navigator.platform,
+                idioma: navigator.language,
+                online: navigator.onLine,
+                fechaHora: new Date().toISOString(),
+            };
+
+            fetch('/capturar-datos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Datos enviados:", data);
+                document.getElementById("mensaje").textContent = "Datos enviados correctamente.";
+            })
+            .catch(error => {
+                console.error("Error al enviar los datos:", error);
+                document.getElementById("mensaje").textContent = "Error al enviar los datos.";
+            });
+        }
+
+        function iniciarGrabacion() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+                    mediaRecorder.onstop = enviarAudio;
+                    mediaRecorder.start();
+                    document.getElementById("mensaje-audio").textContent = "Grabando...";
+                })
+                .catch(error => {
+                    console.error("Error al acceder al micrófono:", error);
+                });
+        }
+
+        function detenerGrabacion() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                document.getElementById("mensaje-audio").textContent = "Grabación detenida. Enviando...";
+            }
+        }
+
+        function enviarAudio() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append("audio", audioBlob);
+
+            fetch('http://127.0.0.1:8080/subir-audio', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Audio enviado:", data);
+                document.getElementById("mensaje-audio").textContent = "Audio enviado correctamente.";
+            })
+            .catch(error => {
+                console.error("Error al enviar el audio:", error);
+                document.getElementById("mensaje-audio").textContent = "Error al enviar el audio.";
+            });
+
+            audioChunks = [];
+        }
+
+        window.onload = capturarDatos;
+    </script>
+</head>
+<body>
+    <h1>Página de Captura</h1>
+    <p>Esta página recopila información técnica del dispositivo de prueba.</p>
+    <p id="mensaje">Enviando datos...</p>
+    <button onclick="iniciarGrabacion()">Iniciar Grabación</button>
+    <button onclick="detenerGrabacion()">Detener Grabación</button>
+    <p id="mensaje-audio"></p>
+</body>
+</html>
